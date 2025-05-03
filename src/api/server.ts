@@ -1,4 +1,5 @@
 import express from "express";
+import type { Request, Response } from "express";
 import bodyParser from "body-parser";
 import { askOllama, listOllamaModels } from "../llm/llm";
 
@@ -8,37 +9,75 @@ const USER_AGENT = "weather-app/1.0";
 const app = express();
 app.use(bodyParser.json());
 
-app.post("/mcp", async (req, res) => {
+// Middleware para tratamento de erros
+const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
+  return (req: Request, res: Response) => {
+    Promise.resolve(fn(req, res)).catch((error) => {
+      console.error("Erro:", error);
+      res.status(500).json({ error: "Erro interno do servidor" });
+    });
+  };
+};
+
+app.post("/mcp", (req, res) => {
   const { tool, input } = req.body;
 
-  try {
-    if (tool === "get-alerts") {
-      const result = await getAlerts(input.state);
-      res.json(result);
-    } else if (tool === "get-forecast") {
-      const result = await getForecast(input.latitude, input.longitude);
-      res.json(result);
-    } else if (tool === "list-llms") {
-      const models = await listOllamaModels();
-      res.json({ models });
-    } else if (tool === "ask-llm") {
-      const { model, prompt } = input;
-      if (!model || !prompt) {
-        return res.status(400).json({ error: "Informe 'model' e 'prompt'." });
+  (async () => {
+    try {
+      if (tool === "get-alerts") {
+        const result = await getAlerts(input.state);
+        res.json(result);
+      } else if (tool === "get-forecast") {
+        const result = await getForecast(input.latitude, input.longitude);
+        res.json(result);
+      } else if (tool === "list-llms") {
+        const models = await listOllamaModels();
+        res.json({ models });
+      } else if (tool === "ask-llm") {
+        const { model, prompt } = input;
+        if (!model || !prompt) {
+          return res.status(400).json({ error: "Informe 'model' e 'prompt'." });
+        }
+        const response = await askOllama(model, prompt);
+        res.json({ response });
+      } else {
+        res.status(400).json({ error: "Ferramenta desconhecida" });
       }
-      const response = await askOllama(model, prompt);
-      res.json({ response });
-    } else {
-      res.status(400).json({ error: "Ferramenta desconhecida" });
+    } catch (err) {
+      console.error("Erro ao processar requisição:", err);
+      res.status(500).json({ error: "Erro interno do servidor" });
     }
-  } catch (err) {
-   console.error("Erro ao processar requisição:", err);
-  res.status(500).json({ error: "Erro interno do servidor" });
-  }
+  })();
 });
 
-app.listen(3000, () => {
-  console.log("Servidor HTTP MCP rodando em http://localhost:3000/mcp");
+// Rota específica para listar modelos LLM (sem necessidade de protocolo MCP)
+app.get(
+  "/llm/models",
+  asyncHandler(async (req: Request, res: Response) => {
+    const models = await listOllamaModels();
+    res.json({ models });
+  })
+);
+
+// Rota específica para chat com LLM (sem necessidade de protocolo MCP)
+app.post(
+  "/llm/chat",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { model, prompt } = req.body;
+    if (!model || !prompt) {
+      res.status(400).json({
+        error: "Informe 'model' e 'prompt' no corpo da requisição",
+      });
+      return;
+    }
+    const response = await askOllama(model, prompt);
+    res.json({ response });
+  })
+);
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 
 async function makeNWSRequest<T>(url: string): Promise<T | null> {
@@ -119,12 +158,16 @@ export async function getAlerts(state: string) {
     };
   }
   const formattedAlerts = features.map(formatAlert);
-  const alertsText = `Active alerts for ${stateCode}:\n\n${formattedAlerts.join("\n")}`;
+  const alertsText = `Active alerts for ${stateCode}:\n\n${formattedAlerts.join(
+    "\n"
+  )}`;
   return { content: [{ type: "text", text: alertsText }] };
 }
 
 export async function getForecast(latitude: number, longitude: number) {
-  const pointsUrl = `${NWS_API_BASE}/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+  const pointsUrl = `${NWS_API_BASE}/points/${latitude.toFixed(
+    4
+  )},${longitude.toFixed(4)}`;
   const pointsData = await makeNWSRequest<PointsResponse>(pointsUrl);
   if (!pointsData) {
     return {
@@ -162,12 +205,16 @@ export async function getForecast(latitude: number, longitude: number) {
   const formattedForecast = periods.map((period: ForecastPeriod) =>
     [
       `${period.name || "Unknown"}:`,
-      `Temperature: ${period.temperature || "Unknown"}°${period.temperatureUnit || "F"}`,
+      `Temperature: ${period.temperature || "Unknown"}°${
+        period.temperatureUnit || "F"
+      }`,
       `Wind: ${period.windSpeed || "Unknown"} ${period.windDirection || ""}`,
       `${period.shortForecast || "No forecast available"}`,
       "---",
     ].join("\n")
   );
-  const forecastText = `Forecast for ${latitude}, ${longitude}:\n\n${formattedForecast.join("\n")}`;
+  const forecastText = `Forecast for ${latitude}, ${longitude}:\n\n${formattedForecast.join(
+    "\n"
+  )}`;
   return { content: [{ type: "text", text: forecastText }] };
 }
