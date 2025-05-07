@@ -1,0 +1,58 @@
+[
+  {
+    "name": "llama3.2",
+    "type": "ollama",
+    "model": "llama3.2:3b",
+    "description": "Llama 3.2 3B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "gemma2",
+    "type": "ollama",
+    "model": "gemma2:2b",
+    "description": "Gemma 2 2B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "qwen3-8b",
+    "type": "ollama",
+    "model": "qwen3:8b",
+    "description": "Qwen 3 8B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "qwen3-4b",
+    "type": "ollama",
+    "model": "qwen3:4b",
+    "description": "Qwen 3 4B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "granite3.3-8b",
+    "type": "ollama",
+    "model": "granite3.3:8b",
+    "description": "Granite 3.3 8B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "granite3.2-2b",
+    "type": "ollama",
+    "model": "granite3.2:2b",
+    "description": "Granite 3.2 2B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "deepseek-coder",
+    "type": "ollama",
+    "model": "deepseek-coder:1.3b",
+    "description": "DeepSeek Coder 1.3B do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  },
+  {
+    "name": "starcoder2",
+    "type": "ollama",
+    "model": "starcoder2",
+    "description": "StarCoder2 do Ollama",
+    "capabilities": ["text-generation", "embeddings"]
+  }
+]

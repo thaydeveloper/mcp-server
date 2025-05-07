@@ -1,4 +1,3 @@
-
 export interface OllamaModel {
   name: string;
   size: number;
@@ -56,11 +55,11 @@ export async function askOllama(
 ): Promise<string> {
   // Parâmetros padrão otimizados para velocidade e controle de resposta
   const defaultOptions = {
-    num_predict: 128,        // Menos tokens = resposta mais rápida
-    temperature: 0.5,       // Mais determinístico, mas ainda criativo
-    top_p: 0.9,             // Nucleus sampling
-    top_k: 40,              // Top-k sampling
-    ...options
+    num_predict: 128, // Menos tokens = resposta mais rápida
+    temperature: 0.5, // Mais determinístico, mas ainda criativo
+    top_p: 0.9, // Nucleus sampling
+    top_k: 40, // Top-k sampling
+    ...options,
   };
 
   const res = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
@@ -70,7 +69,7 @@ export async function askOllama(
       model,
       prompt,
       stream: false,
-      options: defaultOptions
+      options: defaultOptions,
     }),
   });
   if (!res.ok) throw new Error("Erro ao consultar modelo Ollama");

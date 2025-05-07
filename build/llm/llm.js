@@ -26,7 +26,7 @@ async function askOllama(model, prompt, options = {}) {
         temperature: 0.5, // Mais determinístico, mas ainda criativo
         top_p: 0.9, // Nucleus sampling
         top_k: 40, // Top-k sampling
-        ...options
+        ...options,
     };
     const res = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
         method: "POST",
@@ -35,7 +35,7 @@ async function askOllama(model, prompt, options = {}) {
             model,
             prompt,
             stream: false,
-            options: defaultOptions
+            options: defaultOptions,
         }),
     });
     if (!res.ok)
